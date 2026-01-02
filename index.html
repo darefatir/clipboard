@@ -3,91 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Debug Mode</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body class="bg-black text-white p-6">
-
-    <h1 class="text-2xl text-red-500 font-bold mb-4">⚠️ Diagnostic Tool</h1>
+    <title>Family Sync (Dark)</title>
     
-    <div class="mb-4">
-        <p><strong>Project URL:</strong> <span id="urlStatus">Checking...</span></p>
-        <p><strong>API Key:</strong> <span id="keyStatus">Checking...</span></p>
-        <p><strong>Connection:</strong> <span id="connStatus">Waiting...</span></p>
-    </div>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <div id="finalResult" class="p-4 rounded border border-gray-700 bg-gray-900 font-mono text-sm whitespace-pre-wrap">
-        Running tests...
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .note-item { animation: fadeIn 0.3s ease-out forwards; }
+
+        /* Dark Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen pb-10">
+
+    <div class="max-w-md mx-auto min-h-screen flex flex-col">
+        
+        <div class="bg-gray-800 sticky top-0 z-10 px-6 py-4 border-b border-gray-700 shadow-lg flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <h1 class="font-bold text-xl tracking-tight text-white">Family Sync</h1>
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+            </div>
+            <button onclick="window.location.reload()" class="p-2 text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+            </button>
+        </div>
+
+        <div id="errorBox" class="hidden m-4 p-4 bg-red-900/50 border border-red-500 rounded-xl text-red-200 text-sm">
+            <strong class="block text-red-100 mb-1">Connection Failed:</strong>
+            <span id="errorMsg"></span>
+        </div>
+
+        <div class="p-4">
+            <div class="bg-gray-800 rounded-2xl shadow-lg border border-gray-700 p-1 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+                <textarea 
+                    id="noteInput" 
+                    rows="3" 
+                    class="w-full p-3 resize-none outline-none text-gray-100 placeholder:text-gray-500 bg-transparent rounded-xl"
+                    placeholder="Type or paste something here..."></textarea>
+                <div class="flex justify-end px-2 pb-2">
+                    <button 
+                        id="sendBtn" 
+                        onclick="addNote()" 
+                        class="bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                        Post
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 px-4 space-y-3" id="notesList">
+            <div class="animate-pulse space-y-3">
+                <div class="h-24 bg-gray-800 rounded-xl border border-gray-700"></div>
+                <div class="h-24 bg-gray-800 rounded-xl border border-gray-700"></div>
+            </div>
+        </div>
+        
+        <div class="text-center text-xs text-gray-600 mt-8 mb-4">
+            Encrypted? No. Fast? Yes.
+        </div>
+
     </div>
 
     <script>
-        // --- YOUR SETTINGS ---
+        // ==========================================
+        // 1. CONFIGURATION
+        // ==========================================
+        
         const SUPABASE_URL = 'https://sznvcrjwiblgfvxnysoy.supabase.co';
-        
-        // PASTE YOUR LEGACY KEY (The long one starting with eyJ...)
+
+        // ⚠️ PASTE YOUR KEY INSIDE THE QUOTES BELOW ⚠️
+        // Use the LEGACY key (Starts with "eyJ...") from the "Legacy anon" tab.
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6bnZjcmp3aWJsZ2Z2eG55c295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzA2ODAsImV4cCI6MjA4Mjk0NjY4MH0.cpwIj4osd8SX0jggNPuMesAtrYfCjCN9yB5XqhHhUwE'; 
-        // ---------------------
 
-        const resultBox = document.getElementById('finalResult');
-        
-        function log(msg, color = 'text-white') {
-            const span = document.createElement('div');
-            span.className = color;
-            span.innerText = `> ${msg}`;
-            resultBox.appendChild(span);
-        }
+        // ==========================================
 
-        async function runDiagnostics() {
-            // 1. Check URL
-            document.getElementById('urlStatus').innerText = SUPABASE_URL ? "✅ Present" : "❌ Missing";
+        // Initialize Supabase
+        // We set persistSession: false to prevent browser security blocking local files
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+        });
+
+        // 2. Fetch Notes (With Diagnostic Error Reporting)
+        async function fetchNotes() {
+            const list = document.getElementById('notesList');
+            const errorBox = document.getElementById('errorBox');
             
-            // 2. Check Key format
-            const keyEl = document.getElementById('keyStatus');
-            if (!SUPABASE_KEY || SUPABASE_KEY.includes('PASTE_YOUR')) {
-                keyEl.innerText = "❌ Missing or Default";
-                log("FATAL: You have not pasted your API Key yet.", "text-red-500");
-                return;
-            } else if (SUPABASE_KEY.startsWith('sb_publishable')) {
-                keyEl.innerText = "⚠️ Using New Key Format";
-                log("WARNING: You are using the 'sb_publishable' key. The HTML file works best with the 'Legacy Anon' key (starts with eyJ...).", "text-yellow-400");
-            } else if (SUPABASE_KEY.startsWith('eyJ')) {
-                keyEl.innerText = "✅ Legacy Key Detected";
-            } else {
-                keyEl.innerText = "❓ Unknown Format";
-            }
-
-            // 3. Test Connection
-            document.getElementById('connStatus').innerText = "Testing...";
             try {
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-                    auth: { persistSession: false }
-                });
+                // Test Connection
+                const { data, error } = await supabase
+                    .from('notes')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
 
-                const { data, error } = await supabase.from('notes').select('*').limit(1);
+                if (error) throw error;
 
-                if (error) {
-                    document.getElementById('connStatus').innerText = "❌ Failed";
-                    log(`SUPABASE ERROR: ${error.message}`, "text-red-500");
-                    log(`Error Code: ${error.code}`, "text-gray-400");
-                    
-                    if (error.code === '42P01') log("Hint: The table 'notes' does not exist.", "text-blue-400");
-                    if (error.code === 'PGRST301') log("Hint: RLS is blocking access. Disable RLS in Supabase.", "text-blue-400");
-                    if (error.message.includes('API Key')) log("Hint: Your API Key is invalid.", "text-blue-400");
-                } else {
-                    document.getElementById('connStatus').innerText = "✅ SUCCESS!";
-                    log("SUCCESS: Connection established! The database is reachable.", "text-green-500");
-                    log(`Found ${data.length} notes.`, "text-gray-400");
-                    log("You can now switch back to the main 'index.html' file.", "text-green-400");
+                // Success
+                errorBox.classList.add('hidden'); // Hide error box if it was open
+                
+                if (!data || data.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center py-10 opacity-50">
+                            <p class="text-gray-500 text-sm">Clipboard is empty.</p>
+                        </div>`;
+                    return;
                 }
 
+                renderNotes(data);
+
             } catch (err) {
-                document.getElementById('connStatus').innerText = "❌ Network/Script Error";
-                log(`BROWSER ERROR: ${err.message}`, "text-red-500");
+                console.error("Connection Error:", err);
+                
+                // SHOW THE ERROR ON SCREEN
+                list.innerHTML = ''; // Clear skeleton
+                errorBox.classList.remove('hidden');
+                
+                let friendlyMsg = err.message;
+                if(err.code === "PGRST301") friendlyMsg = "Row Level Security (RLS) is blocking access. Go to Supabase > Authentication > Policies and Disable RLS on 'notes'.";
+                if(err.message.includes("FetchError")) friendlyMsg = "Network blocked. Are you offline or using a VPN?";
+                if(err.code === "42P01") friendlyMsg = "Table missing. Did you name your table 'notes' (lowercase)?";
+                
+                document.getElementById('errorMsg').innerText = `${friendlyMsg} (Code: ${err.code || 'N/A'})`;
             }
         }
 
-        runDiagnostics();
+        // 3. Add Note
+        async function addNote() {
+            const input = document.getElementById('noteInput');
+            const btn = document.getElementById('sendBtn');
+            const text = input.value.trim();
+            if (!text) return;
+
+            btn.disabled = true;
+            btn.innerText = '...';
+
+            try {
+                const { error } = await supabase.from('notes').insert([{ content: text }]);
+                if (error) throw error;
+                input.value = ''; 
+                fetchNotes(); 
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Post';
+            }
+        }
+
+        // 4. Render (Dark Mode Styles)
+        function renderNotes(notes) {
+            const list = document.getElementById('notesList');
+            list.innerHTML = '';
+
+            notes.forEach(note => {
+                const dateObj = note.created_at ? new Date(note.created_at) : new Date();
+                const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateStr = dateObj.toLocaleDateString();
+                const safeContent = note.content ? note.content.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
+
+                const item = document.createElement('div');
+                item.className = 'note-item bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-700 relative group';
+                item.innerHTML = `
+                    <div class="text-gray-200 text-base leading-relaxed whitespace-pre-wrap font-mono text-sm">${safeContent}</div>
+                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-700">
+                        <span class="text-xs text-gray-500 font-medium">${dateStr}, ${timeStr}</span>
+                        <button onclick="copyToClipboard(this)" class="flex items-center gap-1 text-xs font-semibold text-blue-400 bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg transition-colors border border-gray-600">
+                            Copy
+                        </button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // 5. Copy Utility
+        function copyToClipboard(btn) {
+            const card = btn.closest('.note-item');
+            const text = card.querySelector('.whitespace-pre-wrap').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHTML = btn.innerHTML;
+                btn.classList.replace('text-blue-400', 'text-green-400');
+                btn.innerHTML = `Copied!`;
+                setTimeout(() => {
+                    btn.classList.replace('text-green-400', 'text-blue-400');
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            });
+        }
+
+        // 6. Realtime Sync
+        supabase.channel('public:notes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, () => fetchNotes())
+            .subscribe();
+
+        // Start
+        fetchNotes();
     </script>
 </body>
 </html>
