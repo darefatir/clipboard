@@ -2,143 +2,218 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shared Clipboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Family Sync</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <style>
-        body { background-color: #f8f9fa; padding: 20px; }
-        .note-card { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .timestamp { font-size: 0.8em; color: #888; }
-        .copy-btn { font-size: 0.8em; }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; }
+        
+        /* Smooth fade in for new items */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .note-item { animation: fadeIn 0.3s ease-out forwards; }
+
+        /* Custom scrollbar to look clean */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
 </head>
-<body>
+<body class="text-slate-800 pb-10">
 
-<div class="container" style="max-width: 600px;">
-    <h2 class="mb-4 text-center">📝 Family Clipboard</h2>
-
-    <div class="card p-3 mb-4">
-        <textarea id="noteInput" class="form-control mb-2" rows="3" placeholder="Paste text here..."></textarea>
-        <button onclick="addNote()" class="btn btn-primary w-100" id="sendBtn">Post to Clipboard</button>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="text-muted small">Live Sync Active 🟢</span>
-        <button onclick="fetchNotes()" class="btn btn-sm btn-outline-secondary">🔄 Manual Refresh</button>
-    </div>
-
-    <div id="notesList">
-        <div class="text-center text-muted">Loading...</div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-    // --- CONFIGURATION ---
-    // Replace these with your actual keys from Supabase Dashboard -> Settings -> API
-    const SUPABASE_URL = 'https://sznvcrjwiblgfvxnysoy.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_pDbOdybKahCyAuvqEPYZwA_6TPKlsI-'; 
-
-    // Initialize Supabase
-    const supabase = showSupabaseInstance();
-
-    function showSupabaseInstance() {
-        return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    }
-
-    // 1. Fetch Data (The "Refresh" Logic)
-    async function fetchNotes() {
-        const list = document.getElementById('notesList');
+    <div class="max-w-md mx-auto min-h-screen flex flex-col">
         
-        // Get data from 'notes' table, order by newest first
-        const { data, error } = await supabase
-            .from('notes')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(20); // Only get last 20 to keep it clean
+        <div class="bg-white sticky top-0 z-10 px-6 py-4 border-b border-slate-100 shadow-sm flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <h1 class="font-bold text-xl tracking-tight text-slate-900">Family Sync</h1>
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+            </div>
+            <button onclick="fetchNotes()" class="p-2 text-slate-400 hover:text-slate-600 transition-colors" title="Force Refresh">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+            </button>
+        </div>
 
-        if (error) {
-            console.error('Error:', error);
-            list.innerHTML = `<div class="text-danger">Error loading notes.</div>`;
-            return;
-        }
-
-        renderNotes(data);
-    }
-
-    // 2. Add Data (The "Post" Logic)
-    async function addNote() {
-        const input = document.getElementById('noteInput');
-        const text = input.value.trim();
-        const btn = document.getElementById('sendBtn');
-
-        if (!text) return;
-
-        btn.disabled = true;
-        btn.innerText = "Posting...";
-
-        // Insert into Supabase
-        const { error } = await supabase
-            .from('notes')
-            .insert([{ content: text }]);
-
-        if (error) {
-            alert('Error posting note!');
-            console.error(error);
-        } else {
-            input.value = ''; // Clear input
-        }
-
-        btn.disabled = false;
-        btn.innerText = "Post to Clipboard";
-    }
-
-    // 3. Render the HTML
-    function renderNotes(notes) {
-        const list = document.getElementById('notesList');
-        list.innerHTML = ''; // Clear current list
-
-        notes.forEach(note => {
-            const date = new Date(note.created_at).toLocaleString();
-            const safeContent = note.content.replace(/</g, "&lt;").replace(/>/g, "&gt;"); // Prevent XSS
-
-            const html = `
-                <div class="note-card">
-                    <div class="d-flex justify-content-between">
-                        <div class="timestamp">${date}</div>
-                        <button class="btn btn-sm btn-light border copy-btn" onclick="copyText('${safeContent.replace(/'/g, "\\'")}')">📋 Copy</button>
-                    </div>
-                    <div class="mt-2" style="white-space: pre-wrap;">${safeContent}</div>
+        <div class="p-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-1 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all">
+                <textarea 
+                    id="noteInput" 
+                    rows="3" 
+                    class="w-full p-3 resize-none outline-none text-slate-700 placeholder:text-slate-400 bg-transparent rounded-xl"
+                    placeholder="Type or paste something here..."></textarea>
+                <div class="flex justify-end px-2 pb-2">
+                    <button 
+                        id="sendBtn" 
+                        onclick="addNote()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-xl transition-all active:scale-95 shadow-md shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                        Post
+                    </button>
                 </div>
-            `;
-            list.innerHTML += html;
-        });
-    }
+            </div>
+        </div>
 
-    // 4. Utility: Copy to Clipboard
-    function copyText(text) {
-        navigator.clipboard.writeText(text);
-        alert("Copied!");
-    }
+        <div class="flex-1 px-4 space-y-3" id="notesList">
+            <div class="animate-pulse space-y-3">
+                <div class="h-24 bg-slate-200 rounded-xl"></div>
+                <div class="h-24 bg-slate-200 rounded-xl"></div>
+            </div>
+        </div>
+        
+        <div class="text-center text-xs text-slate-400 mt-8 mb-4">
+            End-to-End Encrypted (Just Kidding, it's open)
+        </div>
 
-    // 5. REALTIME SYNC (The Magic)
-    // This listens for any new rows added to the DB and auto-refreshes
-    supabase
-        .channel('notes-channel')
-        .on(
-            'postgres_changes', 
-            { event: 'INSERT', schema: 'public', table: 'notes' }, 
-            (payload) => {
-                console.log('New note received!', payload);
-                fetchNotes(); // Auto-refresh when someone posts
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
+        
+        // 1. Your Project URL (Already filled)
+        const SUPABASE_URL = 'https://sznvcrjwiblgfvxnysoy.supabase.co';
+
+        // 2. YOUR KEY GOES HERE
+        // Paste the long string starting with "sb_publishable_" inside the quotes below.
+        const SUPABASE_KEY = 'sb_publishable_pDbOdybKahCyAuvqEPYZwA_6TPKlsI-'; 
+
+        // ==========================================
+        
+        // Initialize Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 1. Fetch Notes
+        async function fetchNotes() {
+            const list = document.getElementById('notesList');
+            
+            // Query DB
+            const { data, error } = await supabase
+                .from('notes')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            if (error) {
+                console.error('Error:', error);
+                list.innerHTML = `
+                    <div class="bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100 text-center">
+                        <strong>Connection Failed</strong><br/>
+                        ${error.message}<br/>
+                        <span class="text-xs opacity-75">Check: Table Name 'notes' exists? RLS disabled?</span>
+                    </div>`;
+                return;
             }
-        )
-        .subscribe();
 
-    // Initial Load
-    fetchNotes();
+            if (!data || data.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-10 opacity-50">
+                        <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        <p class="text-slate-400 text-sm">Clipboard is empty</p>
+                    </div>`;
+                return;
+            }
 
-</script>
+            renderNotes(data);
+        }
+
+        // 2. Add Note
+        async function addNote() {
+            const input = document.getElementById('noteInput');
+            const btn = document.getElementById('sendBtn');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            // UI Loading State
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin inline-block mr-1">⟳</span>';
+
+            const { error } = await supabase
+                .from('notes')
+                .insert([{ content: text }]);
+
+            btn.disabled = false;
+            btn.innerText = 'Post';
+
+            if (error) {
+                alert('Error: ' + error.message);
+            } else {
+                input.value = ''; // Clear input
+                // We don't fetch here, we let the Realtime subscription handle the UI update
+            }
+        }
+
+        // 3. Render Logic
+        function renderNotes(notes) {
+            const list = document.getElementById('notesList');
+            list.innerHTML = '';
+
+            notes.forEach(note => {
+                const dateObj = new Date(note.created_at);
+                // Format: "10:45 AM" or "Jan 3"
+                const timeString = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateString = dateObj.toLocaleDateString();
+                
+                // Safety
+                const safeContent = note.content ? note.content.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
+
+                const item = document.createElement('div');
+                item.className = 'note-item bg-white p-4 rounded-xl shadow-sm border border-slate-100 relative group';
+                item.innerHTML = `
+                    <div class="text-slate-700 text-base leading-relaxed break-words whitespace-pre-wrap font-mono text-sm">${safeContent}</div>
+                    
+                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-50">
+                        <span class="text-xs text-slate-400 font-medium">${dateString}, ${timeString}</span>
+                        
+                        <button onclick="copyToClipboard(this)" class="flex items-center gap-1 text-xs font-semibold text-blue-500 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            Copy
+                        </button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // 4. Copy Function
+        function copyToClipboard(btn) {
+            // Find text in parent card
+            const card = btn.closest('.note-item');
+            const text = card.querySelector('.whitespace-pre-wrap').innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHTML = btn.innerHTML;
+                
+                // Success State
+                btn.className = "flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors cursor-default";
+                btn.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Copied`;
+                
+                // Reset after 2s
+                setTimeout(() => {
+                    btn.className = "flex items-center gap-1 text-xs font-semibold text-blue-500 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors";
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            });
+        }
+
+        // 5. Realtime Sync
+        const channel = supabase
+            .channel('public:notes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, (payload) => {
+                console.log('Realtime update:', payload);
+                fetchNotes(); // Refresh list on any change
+            })
+            .subscribe();
+
+        // Start
+        fetchNotes();
+
+    </script>
 </body>
 </html>
