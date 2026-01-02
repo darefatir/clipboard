@@ -142,10 +142,10 @@
     });
 
     // Optional: don't do this in production; for PoC it avoids confusion from old cached state
-    try {
-      window.localStorage.clear();
-      console.log("Browser storage cleared (PoC).");
-    } catch (e) {
+    // try {
+    //   window.localStorage.clear();
+    //   console.log("Browser storage cleared (PoC).");
+    // } catch (e) {
       console.warn("Could not clear storage", e);
     }
 
