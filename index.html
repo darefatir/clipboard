@@ -3,75 +3,257 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Family Sync (PoC)</title>
+  <title>Notes of Mingky</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Supabase loader: tries multiple CDNs -->
+  <!-- Supabase ESM loader (works on GitHub Pages) -->
   <script>
-    // 1. Create the promise your app expects immediately
-    // This prevents the "undefined" error if the bottom script runs too fast
     let resolveLoader;
-    window.__supabase_load_promise__ = new Promise((resolve) => {
-      resolveLoader = resolve;
-    });
+    window.__supabase_load_promise__ = new Promise((resolve) => { resolveLoader = resolve; });
   </script>
 
   <script type="module">
-    // 2. Import Supabase directly as a module (Modern Standard)
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-    // 3. Manually attach it to the window so your existing code works
     window.supabase = { createClient };
-
-    // 4. Tell your app the library is ready
-    resolveLoader({ ok: true, loadedFrom: 'ES Module (+esm)' });
+    resolveLoader({ ok: true });
   </script>
+
+  <style>
+    /* Smooth scroll + nicer scrollbars */
+    html { scroll-behavior: smooth; }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: rgba(17,24,39,.7); }
+    ::-webkit-scrollbar-thumb { background: rgba(75,85,99,.9); border-radius: 999px; border: 2px solid rgba(17,24,39,.7); }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(107,114,128,.95); }
+
+    /* Make date input icon visible on dark bg (best-effort) */
+    input[type="date"] { color-scheme: dark; }
+  </style>
 </head>
 
-<body class="bg-gray-900 text-gray-100 min-h-screen p-6">
-  <div class="max-w-xl mx-auto space-y-4">
-    <h1 class="text-3xl font-bold">Family Sync (PoC)</h1>
+<body class="bg-gray-950 text-gray-100 min-h-screen font-sans selection:bg-blue-500/30">
+  <!-- Background glow -->
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-blue-600/20 blur-3xl"></div>
+    <div class="absolute top-40 right-[-10rem] h-72 w-72 rounded-full bg-indigo-500/10 blur-3xl"></div>
+    <div class="absolute bottom-[-10rem] left-[-10rem] h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl"></div>
+  </div>
 
-    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
-      <div class="font-semibold text-lg">Status</div>
-      <div id="status" class="text-sm text-gray-300 mt-2">Booting…</div>
+  <div class="mx-auto max-w-5xl px-4 py-6 md:py-10 space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 shadow-lg shadow-blue-500/20 grid place-items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 2v6h6"/>
+            <path d="M8 13h8"/>
+            <path d="M8 17h8"/>
+            <path d="M8 9h2"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold tracking-tight">
+            Notes of <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Mingky</span>
+          </h1>
+          <p class="text-xs md:text-sm text-gray-400 mt-0.5">
+            Shared notes — Jakarta time (UTC+7)
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div id="status"
+             class="text-xs font-mono px-3 py-1.5 rounded-full bg-gray-900/70 text-gray-300 border border-gray-800 shadow-sm">
+          Booting…
+        </div>
+
+        <button id="refreshBtn"
+                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-900/70 hover:bg-gray-900 text-gray-200 border border-gray-800 transition shadow-sm"
+                title="Refresh">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+            <path d="M16 21h5v-5"/>
+          </svg>
+          <span class="text-xs font-semibold">Refresh</span>
+        </button>
+      </div>
     </div>
 
-    <div class="bg-black/40 border border-gray-700 rounded-xl p-4">
-      <div class="font-semibold text-lg mb-2">Debug</div>
-      <pre id="debug" class="text-xs whitespace-pre-wrap text-gray-300">–</pre>
+    <!-- Composer -->
+    <div class="rounded-2xl border border-gray-800 bg-gray-900/60 backdrop-blur shadow-xl shadow-black/20">
+      <div class="p-4 md:p-5">
+        <div class="flex flex-col md:flex-row gap-3">
+          <div class="flex-1 relative">
+            <textarea id="input" rows="2"
+              class="w-full p-3 pr-12 bg-gray-950/60 border border-gray-800 rounded-xl text-sm leading-relaxed
+                     focus:outline-none focus:border-blue-500/70 focus:ring-2 focus:ring-blue-500/20 transition
+                     placeholder:text-gray-500 resize-none"
+              placeholder="Type a new note… (Ctrl/⌘ + Enter to add)"></textarea>
+
+            <div class="absolute right-3 top-3 text-[11px] text-gray-500 font-mono select-none">
+              <span id="charCount">0</span>
+              <span class="text-gray-600">/</span>
+              <span>2000</span>
+            </div>
+          </div>
+
+          <button id="postBtn"
+            class="md:self-stretch bg-blue-600 hover:bg-blue-500 active:bg-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold
+                   transition shadow-lg shadow-blue-600/10 disabled:opacity-60 disabled:cursor-not-allowed
+                   inline-flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14"/>
+              <path d="M5 12h14"/>
+            </svg>
+            Add Note
+          </button>
+        </div>
+
+        <div class="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <div class="text-xs text-gray-500">
+            Tip: Use multi-line notes; copy any card with one click.
+          </div>
+
+          <div class="flex items-center gap-2">
+            <label class="inline-flex items-center gap-2 text-xs text-gray-400">
+              <input id="autoRefresh" type="checkbox" class="h-4 w-4 rounded border-gray-700 bg-gray-950 text-blue-500 focus:ring-blue-500/30" />
+              Auto refresh (10s)
+            </label>
+
+            <button id="clearFiltersBtn"
+              class="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-950/50 hover:bg-gray-950 border border-gray-800 text-gray-200 transition">
+              Clear filters
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-3">
-      <textarea id="input" rows="3"
-        class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-sm"
-        placeholder="Type something…"></textarea>
+    <!-- Filters -->
+    <div class="rounded-2xl border border-gray-800 bg-gray-900/40 backdrop-blur shadow-lg shadow-black/10">
+      <div class="p-4 md:p-5 grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
+        <div class="md:col-span-3">
+          <label class="block text-[11px] uppercase tracking-wide text-gray-400 mb-1 ml-1">Filter by date</label>
+          <input type="date" id="dateFilter"
+            class="w-full p-2.5 bg-gray-950/60 border border-gray-800 rounded-xl text-sm text-gray-200
+                   focus:border-blue-500/70 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
+        </div>
 
-      <button id="postBtn"
-        class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-semibold">
-        Post
-      </button>
+        <div class="md:col-span-7">
+          <label class="block text-[11px] uppercase tracking-wide text-gray-400 mb-1 ml-1">Search content</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input type="text" id="textFilter"
+              class="w-full pl-10 p-2.5 bg-gray-950/60 border border-gray-800 rounded-xl text-sm text-gray-200
+                     focus:border-blue-500/70 focus:ring-2 focus:ring-blue-500/20 focus:outline-none placeholder:text-gray-500"
+              placeholder="Search notes…" />
+          </div>
+        </div>
+
+        <div class="md:col-span-2 flex items-end">
+          <div class="w-full rounded-xl border border-gray-800 bg-gray-950/40 px-3 py-2.5">
+            <div class="text-[11px] uppercase tracking-wide text-gray-500">Records</div>
+            <div id="recordCount" class="text-sm font-semibold text-gray-200">0</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div id="notes" class="space-y-2"></div>
+    <!-- Notes list (cards on mobile, table on desktop) -->
+    <div class="rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur shadow-xl shadow-black/15 overflow-hidden">
+      <div class="px-4 md:px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="h-2 w-2 rounded-full bg-emerald-400"></div>
+          <h2 class="font-semibold tracking-tight">Recent Notes</h2>
+          <span class="text-xs text-gray-500">(latest 100)</span>
+        </div>
+
+        <div class="text-xs text-gray-500 hidden md:block">
+          Click a row to expand • Copy button on each note
+        </div>
+      </div>
+
+      <!-- Desktop table -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-gray-950/60 text-gray-400 uppercase font-semibold text-[11px] border-b border-gray-800">
+            <tr>
+              <th class="px-6 py-3 w-56">Date (UTC+7)</th>
+              <th class="px-6 py-3">Note</th>
+              <th class="px-6 py-3 w-32 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="notesBodyTable" class="divide-y divide-gray-800 text-gray-200">
+            <tr>
+              <td colspan="3" class="px-6 py-10 text-center text-gray-500 italic">
+                Waiting for connection…
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile cards -->
+      <div id="notesBodyCards" class="md:hidden p-4 space-y-3">
+        <div class="text-center text-gray-500 italic py-8">
+          Waiting for connection…
+        </div>
+      </div>
+    </div>
+
+    <footer class="pt-2 text-xs text-gray-600 text-center">
+      Built on GitHub Pages + Supabase (PoC). Make it secure later.
+    </footer>
+
   </div>
 
   <script>
+    // --- CONFIGURATION ---
     const SUPABASE_URL = "https://sznvcrjwiblgfvxnysoy.supabase.co";
-    const SUPABASE_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6bnZjcmp3aWJsZ2Z2eG55c295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzA2ODAsImV4cCI6MjA4Mjk0NjY4MH0.cpwIj4osd8SX0jggNPuMesAtrYfCjCN9yB5XqhHhUwE";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6bnZjcmp3aWJsZ2Z2eG55c295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzA2ODAsImV4cCI6MjA4Mjk0NjY4MH0.cpwIj4osd8SX0jggNPuMesAtrYfCjCN9yB5XqhHhUwE";
     const TABLE = "notes";
 
+    // --- DOM ELEMENTS ---
     const statusEl = document.getElementById("status");
-    const debugEl = document.getElementById("debug");
-    const notesEl = document.getElementById("notes");
     const inputEl = document.getElementById("input");
     const postBtn = document.getElementById("postBtn");
+    const dateFilter = document.getElementById("dateFilter");
+    const textFilter = document.getElementById("textFilter");
+    const recordCount = document.getElementById("recordCount");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const autoRefresh = document.getElementById("autoRefresh");
+    const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+    const charCount = document.getElementById("charCount");
 
-    function setStatus(msg) { statusEl.textContent = msg; }
-    function setDebug(obj) {
-      debugEl.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+    const notesBodyTable = document.getElementById("notesBodyTable");
+    const notesBodyCards = document.getElementById("notesBodyCards");
+
+    // --- STATE ---
+    let supabase;
+    let localNotes = [];
+    let autoTimer = null;
+
+    // --- HELPERS ---
+    function setStatus(msg, type = 'normal') {
+      statusEl.textContent = msg;
+      const colors = {
+        error: "bg-red-900/30 text-red-200 border-red-800",
+        success: "bg-emerald-900/30 text-emerald-200 border-emerald-800",
+        normal: "bg-gray-900/70 text-gray-300 border-gray-800"
+      };
+      statusEl.className = `text-xs font-mono px-3 py-1.5 rounded-full border shadow-sm ${colors[type] || colors.normal}`;
     }
 
     function escapeText(s) {
@@ -80,95 +262,290 @@
       }[c]));
     }
 
-    let supabase;
+    function formatTimeDisplay(isoString) {
+      if (!isoString) return "";
+      return new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Jakarta',
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: false
+      }).format(new Date(isoString));
+    }
 
+    function getDatePartOnly(isoString) {
+      if (!isoString) return "";
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Jakarta',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).format(new Date(isoString));
+    }
+
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text || "");
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function setLoadingState() {
+      notesBodyTable.innerHTML = `
+        <tr>
+          <td colspan="3" class="px-6 py-10 text-center text-gray-500 italic">Loading…</td>
+        </tr>`;
+      notesBodyCards.innerHTML = `
+        <div class="text-center text-gray-500 italic py-8">Loading…</div>`;
+    }
+
+    // --- CORE LOGIC ---
     async function boot() {
-      setStatus("Loading Supabase library…");
-
+      setStatus("Loading library…");
       const result = await window.__supabase_load_promise__;
-      setDebug({
-        location: window.location.href,
-        keyStartsWithEyJ: SUPABASE_KEY.startsWith("eyJ"),
-        supabaseGlobalPresent: !!window.supabase,
-        loaderResult: result
-      });
 
       if (!result.ok) {
-        setStatus("❌ Supabase library failed to load");
-        notesEl.innerHTML = `
-          <div class="text-red-400 text-sm">
-            Supabase JS couldn't be loaded from CDN(s).<br/>
-            Try disabling adblock / privacy extensions, or try a different network.
-          </div>`;
+        setStatus("Library error", "error");
         return;
       }
 
-      setStatus(`Supabase loaded ✅ (${result.loadedFrom})`);
-
       supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+        auth: { persistSession: false }
       });
 
-      setStatus("Supabase client created ✅");
+      setStatus("Connecting…");
+      setLoadingState();
       await fetchNotes();
     }
 
     async function fetchNotes() {
-      setStatus("Fetching notes…");
-      notesEl.innerHTML = `<div class="text-gray-500 text-sm">Fetching…</div>`;
+      setStatus("Fetching…");
+      setLoadingState();
 
       try {
         const { data, error } = await supabase
           .from(TABLE)
           .select("*")
           .order("created_at", { ascending: false })
-          .limit(50);
+          .limit(100);
 
         if (error) throw error;
 
-        setStatus(`Connected ✅ (${data.length} notes)`);
-        notesEl.innerHTML = "";
-
-        if (!data.length) {
-          notesEl.innerHTML = `<div class="text-gray-500 text-sm">No notes yet.</div>`;
-          return;
-        }
-
-        for (const row of data) {
-          const card = document.createElement("div");
-          card.className = "bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm whitespace-pre-wrap";
-          card.innerHTML = escapeText(row.content);
-          notesEl.appendChild(card);
-        }
+        localNotes = data || [];
+        applyFilters();
+        setStatus("Connected", "success");
       } catch (e) {
-        setStatus("❌ Fetch failed");
-        setDebug({
-          ...JSON.parse(debugEl.textContent || "{}"),
-          fetchError: { message: e.message, code: e.code, details: e.details, hint: e.hint }
-        });
-        notesEl.innerHTML = `<div class="text-red-400 text-sm">Fetch failed. See Debug.</div>`;
+        console.error(e);
+        setStatus("Fetch error", "error");
+        notesBodyTable.innerHTML = `
+          <tr>
+            <td colspan="3" class="px-6 py-10 text-center text-red-300 italic">
+              Failed to load notes. Check console.
+            </td>
+          </tr>`;
+        notesBodyCards.innerHTML = `
+          <div class="text-center text-red-300 italic py-8">
+            Failed to load notes. Check console.
+          </div>`;
       }
     }
 
+    function applyFilters() {
+      const textTerm = textFilter.value.toLowerCase().trim();
+      const dateTerm = dateFilter.value;
+
+      const filtered = localNotes.filter(note => {
+        const contentMatch = (note.content || "").toLowerCase().includes(textTerm);
+        let dateMatch = true;
+        if (dateTerm) dateMatch = (getDatePartOnly(note.created_at) === dateTerm);
+        return contentMatch && dateMatch;
+      });
+
+      recordCount.textContent = String(filtered.length);
+      renderDesktopTable(filtered);
+      renderMobileCards(filtered);
+    }
+
+    function renderDesktopTable(data) {
+      notesBodyTable.innerHTML = "";
+
+      if (data.length === 0) {
+        notesBodyTable.innerHTML = `
+          <tr>
+            <td colspan="3" class="px-6 py-10 text-center text-gray-500 italic">
+              No matching notes found.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      data.forEach(note => {
+        const timeStr = formatTimeDisplay(note.created_at);
+        const safeContent = escapeText(note.content);
+
+        const row = document.createElement("tr");
+        row.className = "hover:bg-gray-950/40 transition-colors align-top";
+
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-xs">
+            ${timeStr}
+          </td>
+
+          <td class="px-6 py-4">
+            <div class="whitespace-pre-wrap leading-relaxed text-gray-100">
+              ${safeContent}
+            </div>
+          </td>
+
+          <td class="px-6 py-4 text-right">
+            <button class="copyBtn inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg
+                           bg-gray-950/40 hover:bg-gray-950 border border-gray-800 text-gray-200 transition"
+                    data-content="${safeContent.replace(/"/g, '&quot;')}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copy
+            </button>
+          </td>
+        `;
+
+        notesBodyTable.appendChild(row);
+      });
+
+      // Bind copy buttons
+      notesBodyTable.querySelectorAll(".copyBtn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const rawHtml = btn.getAttribute("data-content") || "";
+          // data-content stored as escaped html, so convert to text by decoding in a temp element
+          const temp = document.createElement("div");
+          temp.innerHTML = rawHtml;
+          const txt = temp.textContent || temp.innerText || "";
+
+          const ok = await copyToClipboard(txt);
+          if (ok) {
+            const prev = btn.innerHTML;
+            btn.innerHTML = `<span class="text-emerald-300 font-semibold">Copied!</span>`;
+            setTimeout(() => (btn.innerHTML = prev), 1200);
+          }
+        });
+      });
+    }
+
+    function renderMobileCards(data) {
+      notesBodyCards.innerHTML = "";
+
+      if (data.length === 0) {
+        notesBodyCards.innerHTML = `
+          <div class="text-center text-gray-500 italic py-8">
+            No matching notes found.
+          </div>`;
+        return;
+      }
+
+      data.forEach(note => {
+        const timeStr = formatTimeDisplay(note.created_at);
+        const safeContent = escapeText(note.content);
+
+        const card = document.createElement("div");
+        card.className = "rounded-2xl border border-gray-800 bg-gray-950/30 p-4 shadow-sm";
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="text-xs font-mono text-gray-400">${timeStr}</div>
+            <button class="copyBtn inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg
+                           bg-gray-900/60 hover:bg-gray-900 border border-gray-800 text-gray-200 transition"
+                    data-content="${safeContent.replace(/"/g, '&quot;')}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copy
+            </button>
+          </div>
+
+          <div class="mt-3 whitespace-pre-wrap leading-relaxed text-sm text-gray-100">
+            ${safeContent}
+          </div>
+        `;
+
+        notesBodyCards.appendChild(card);
+      });
+
+      notesBodyCards.querySelectorAll(".copyBtn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const rawHtml = btn.getAttribute("data-content") || "";
+          const temp = document.createElement("div");
+          temp.innerHTML = rawHtml;
+          const txt = temp.textContent || temp.innerText || "";
+
+          const ok = await copyToClipboard(txt);
+          if (ok) {
+            const prev = btn.innerHTML;
+            btn.innerHTML = `<span class="text-emerald-300 font-semibold">Copied!</span>`;
+            setTimeout(() => (btn.innerHTML = prev), 1200);
+          }
+        });
+      });
+    }
+
+    // --- EVENT LISTENERS ---
     postBtn.addEventListener("click", async () => {
       const text = inputEl.value.trim();
       if (!text || !supabase) return;
 
       postBtn.disabled = true;
-      const old = postBtn.textContent;
-      postBtn.textContent = "Posting…";
+      const oldText = postBtn.innerHTML;
+      postBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        Saving…`;
 
       try {
         const { error } = await supabase.from(TABLE).insert({ content: text });
         if (error) throw error;
 
         inputEl.value = "";
+        charCount.textContent = "0";
         await fetchNotes();
       } catch (e) {
-        alert("Insert failed: " + e.message);
+        alert("Error: " + e.message);
       } finally {
         postBtn.disabled = false;
-        postBtn.textContent = old;
+        postBtn.innerHTML = oldText;
+      }
+    });
+
+    // Ctrl/Cmd + Enter to post
+    inputEl.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        postBtn.click();
+      }
+    });
+
+    // Character counter + auto-expand-ish feel (lightweight)
+    inputEl.addEventListener("input", () => {
+      const len = inputEl.value.length;
+      charCount.textContent = String(Math.min(len, 2000));
+      if (len > 2000) inputEl.value = inputEl.value.slice(0, 2000);
+    });
+
+    textFilter.addEventListener("input", applyFilters);
+    dateFilter.addEventListener("input", applyFilters);
+
+    clearFiltersBtn.addEventListener("click", () => {
+      textFilter.value = "";
+      dateFilter.value = "";
+      applyFilters();
+    });
+
+    refreshBtn.addEventListener("click", fetchNotes);
+
+    autoRefresh.addEventListener("change", () => {
+      if (autoRefresh.checked) {
+        autoTimer = setInterval(fetchNotes, 10000);
+      } else {
+        clearInterval(autoTimer);
+        autoTimer = null;
       }
     });
 
