@@ -2,322 +2,202 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Family Sync</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Sync – Diagnostic</title>
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Supabase JS v2 (UMD build for browsers) ✅ -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Supabase JS v2 – UMD build (browser-safe) -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
-    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #111827; }
-    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
   </style>
 </head>
 
-<body class="bg-gray-900 text-gray-100 min-h-screen pb-10">
-  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+<body class="bg-gray-900 text-gray-100 min-h-screen p-6">
 
-    <!-- Header -->
-    <div class="bg-gray-800 sticky top-0 z-10 px-6 py-4 border-b border-gray-700 shadow-lg flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <h1 class="font-bold text-xl tracking-tight text-white">Family Sync</h1>
-        <span class="relative flex h-3 w-3">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-        </span>
-      </div>
-      <button onclick="window.location.reload()" class="p-2 text-gray-400 hover:text-white transition-colors" aria-label="Reload">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-          <path d="M3 3v5h5"/>
-          <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-          <path d="M16 21h5v-5"/>
-        </svg>
+  <div class="max-w-xl mx-auto space-y-4">
+
+    <h1 class="text-2xl font-bold">Family Sync (PoC)</h1>
+
+    <!-- STATUS -->
+    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+      <div class="font-semibold">Status</div>
+      <div id="status" class="text-sm text-gray-300 mt-1">Booting…</div>
+    </div>
+
+    <!-- DEBUG -->
+    <div class="bg-black/40 border border-gray-700 rounded-lg p-4">
+      <div class="font-semibold mb-2">Debug</div>
+      <pre id="debug" class="text-xs whitespace-pre-wrap text-gray-300">–</pre>
+    </div>
+
+    <!-- INPUT -->
+    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 space-y-3">
+      <textarea
+        id="input"
+        rows="3"
+        class="w-full p-3 bg-gray-900 border border-gray-700 rounded-md text-sm"
+        placeholder="Type something…"></textarea>
+
+      <button
+        id="postBtn"
+        class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-md text-sm font-semibold">
+        Post
       </button>
     </div>
 
-    <!-- Status / Error -->
-    <div id="statusBox" class="m-4 p-3 bg-gray-800/60 border border-gray-700 rounded-xl text-gray-200 text-sm">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <strong class="block text-gray-100 mb-1">Status:</strong>
-          <span id="statusMsg" class="text-gray-300">Booting…</span>
-        </div>
-        <button id="refreshBtn" class="text-xs bg-gray-700 hover:bg-gray-600 border border-gray-600 px-3 py-1.5 rounded-lg transition-colors">
-          Refresh
-        </button>
-      </div>
+    <!-- NOTES -->
+    <div id="notes" class="space-y-2"></div>
 
-      <div id="debugBox" class="mt-3 hidden">
-        <div class="text-xs text-gray-400 mb-1">Debug</div>
-        <pre id="debugText" class="text-xs whitespace-pre-wrap text-gray-300 bg-black/20 p-2 rounded-lg border border-white/5"></pre>
-      </div>
-    </div>
-
-    <!-- Composer -->
-    <div class="p-4">
-      <div class="bg-gray-800 rounded-2xl shadow-lg border border-gray-700 p-1 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
-        <textarea
-          id="noteInput"
-          rows="3"
-          class="w-full p-3 resize-none outline-none text-gray-100 placeholder:text-gray-500 bg-transparent rounded-xl"
-          placeholder="Type or paste something here..."></textarea>
-        <div class="flex justify-end px-2 pb-2">
-          <button
-            id="sendBtn"
-            class="bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
-            Post
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Notes List -->
-    <div class="flex-1 px-4 space-y-3" id="notesList">
-      <div class="text-center text-gray-500 py-10">Connecting…</div>
-    </div>
   </div>
 
-  <script>
-    // -----------------------
-    // CONFIG (EDIT THESE)
-    // -----------------------
-    const SUPABASE_URL = 'https://sznvcrjwiblgfvxnysoy.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6bnZjcmp3aWJsZ2Z2eG55c295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzA2ODAsImV4cCI6MjA4Mjk0NjY4MH0.cpwIj4osd8SX0jggNPuMesAtrYfCjCN9yB5XqhHhUwE'; // for PoC OK; lock down later with RLS/auth
-    const TABLE_NAME = 'notes';
-    const NOTE_COL = 'content';
-    const TS_COL = 'created_at';
-    const LIMIT = 50;
+<script>
+/* -------------------------------------------------
+   CONFIG — already filled with YOUR values
+------------------------------------------------- */
+const SUPABASE_URL = "https://sznvcrjwiblgfvxnysoy.supabase.co";
+const SUPABASE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6bnZjcmp3aWJsZ2Z2eG55c295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzA2ODAsImV4cCI6MjA4Mjk0NjY4MH0.cpwIj4osd8SX0jggNPuMesAtrYfCjCN9yB5XqhHhUwE";
 
-    // Optional: set true to show debug panel
-    const DEBUG = true;
+const TABLE = "notes";
 
-    // -----------------------
-    // Small helpers
-    // -----------------------
-    const el = (id) => document.getElementById(id);
-    const statusMsg = el('statusMsg');
-    const debugBox = el('debugBox');
-    const debugText = el('debugText');
-    const notesList = el('notesList');
-    const sendBtn = el('sendBtn');
-    const noteInput = el('noteInput');
+/* -------------------------------------------------
+   Helpers
+------------------------------------------------- */
+const statusEl = document.getElementById("status");
+const debugEl  = document.getElementById("debug");
+const notesEl  = document.getElementById("notes");
+const inputEl  = document.getElementById("input");
+const postBtn  = document.getElementById("postBtn");
 
-    function setStatus(msg) { statusMsg.textContent = msg; }
-    function setDebug(objOrText) {
-      if (!DEBUG) return;
-      debugBox.classList.remove('hidden');
-      debugText.textContent = typeof objOrText === 'string' ? objOrText : JSON.stringify(objOrText, null, 2);
-    }
-    function escapeHtml(s) {
-      return String(s ?? '')
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
+function setStatus(msg) {
+  statusEl.textContent = msg;
+}
 
-    // -----------------------
-    // Supabase init (UMD)
-    // -----------------------
-    if (!window.supabase) {
-      setStatus("Supabase library failed to load (window.supabase is undefined). Check the script tag.");
-      setDebug("window.supabase is undefined. Make sure you are using the UMD build:\nhttps://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js");
-      throw new Error("Supabase UMD not loaded");
-    }
+function setDebug(obj) {
+  debugEl.textContent = typeof obj === "string"
+    ? obj
+    : JSON.stringify(obj, null, 2);
+}
 
-    // NOTE: for PoC we disable session persistence to keep browser state simple
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-    });
+/* -------------------------------------------------
+   Boot diagnostics
+------------------------------------------------- */
+setStatus("JS loaded ✅");
 
-    // Optional: don't do this in production; for PoC it avoids confusion from old cached state
-    // try {
-    //   window.localStorage.clear();
-    //   console.log("Browser storage cleared (PoC).");
-    // } catch (e) {
-      console.warn("Could not clear storage", e);
-    }
+setDebug({
+  location: window.location.href,
+  hasWindowSupabase: !!window.supabase,
+  keyStartsWithEyJ: SUPABASE_KEY.startsWith("eyJ")
+});
 
-    // -----------------------
-    // Core functions
-    // -----------------------
-    async function fetchNotes() {
-      setStatus("Loading notes…");
-      try {
-        const { data, error } = await supabase
-          .from(TABLE_NAME)
-          .select('*')
-          .order(TS_COL, { ascending: false })
-          .limit(LIMIT);
+if (!window.supabase) {
+  setStatus("❌ Supabase library NOT loaded");
+  throw new Error("Supabase UMD not found");
+}
 
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-          notesList.innerHTML = `
-            <div class="text-center py-10 opacity-60">
-              <p class="text-gray-400 text-sm">Clipboard is empty. Post something!</p>
-            </div>`;
-          setStatus("Connected. No notes yet.");
-          return;
-        }
-
-        renderNotes(data);
-        setStatus(`Connected. Loaded ${data.length} notes.`);
-        setDebug({ loaded: data.length, table: TABLE_NAME });
-
-      } catch (err) {
-        console.error("Fetch error:", err);
-        setStatus(`Failed to load notes: ${err.message || err}`);
-        setDebug(err);
-
-        notesList.innerHTML = `
-          <div class="text-center text-red-400 mt-10">
-            Failed to load notes.<br/>
-            <span class="text-xs text-red-300 opacity-80">Open DevTools Console / Debug box for details.</span>
-          </div>`;
+/* -------------------------------------------------
+   Create client
+------------------------------------------------- */
+let supabase;
+try {
+  supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
       }
     }
+  );
+  setStatus("Supabase client created ✅");
+} catch (e) {
+  setStatus("❌ createClient failed");
+  setDebug(String(e));
+  throw e;
+}
 
-    async function addNote() {
-      const text = noteInput.value.trim();
-      if (!text) return;
+/* -------------------------------------------------
+   Fetch notes
+------------------------------------------------- */
+async function fetchNotes() {
+  setStatus("Fetching notes…");
 
-      sendBtn.disabled = true;
-      const oldLabel = sendBtn.textContent;
-      sendBtn.textContent = "Posting…";
+  try {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
 
-      try {
-        const payload = {};
-        payload[NOTE_COL] = text;
+    if (error) throw error;
 
-        const { error } = await supabase
-          .from(TABLE_NAME)
-          .insert([payload]);
+    setStatus(`Connected ✅ (${data.length} rows)`);
 
-        if (error) throw error;
-
-        noteInput.value = '';
-        setStatus("Posted. Refreshing…");
-        await fetchNotes();
-      } catch (err) {
-        console.error("Insert error:", err);
-        alert("Could not post: " + (err.message || err));
-        setStatus("Post failed.");
-        setDebug(err);
-      } finally {
-        sendBtn.disabled = false;
-        sendBtn.textContent = oldLabel;
-      }
+    notesEl.innerHTML = "";
+    if (data.length === 0) {
+      notesEl.innerHTML =
+        `<div class="text-gray-500 text-sm">No notes yet.</div>`;
+      return;
     }
 
-    function renderNotes(notes) {
-      notesList.innerHTML = '';
-
-      for (const note of notes) {
-        const dateObj = note[TS_COL] ? new Date(note[TS_COL]) : new Date();
-        const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const dateStr = dateObj.toLocaleDateString();
-
-        const safeContent = escapeHtml(note[NOTE_COL]);
-
-        const item = document.createElement('div');
-        item.className = 'bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-700';
-        item.innerHTML = `
-          <div class="text-gray-200 leading-relaxed whitespace-pre-wrap font-mono text-sm">${safeContent}</div>
-          <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-700">
-            <span class="text-xs text-gray-500 font-medium">${dateStr}, ${timeStr}</span>
-            <button class="copyBtn flex items-center gap-1 text-xs font-semibold text-blue-400 bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg transition-colors border border-gray-600">
-              Copy
-            </button>
-          </div>
-        `;
-
-        item.querySelector('.copyBtn').addEventListener('click', async (e) => {
-          const btn = e.currentTarget;
-          const textToCopy = note[NOTE_COL] || '';
-          try {
-            await navigator.clipboard.writeText(textToCopy);
-            const old = btn.textContent;
-            btn.textContent = "Copied!";
-            btn.classList.remove('text-blue-400');
-            btn.classList.add('text-green-400');
-            setTimeout(() => {
-              btn.textContent = old;
-              btn.classList.remove('text-green-400');
-              btn.classList.add('text-blue-400');
-            }, 1400);
-          } catch (err) {
-            alert("Clipboard copy failed. Your browser may block it on non-HTTPS sites.");
-          }
-        });
-
-        notesList.appendChild(item);
-      }
+    for (const row of data) {
+      const div = document.createElement("div");
+      div.className =
+        "bg-gray-800 border border-gray-700 rounded-md p-3 text-sm whitespace-pre-wrap";
+      div.textContent = row.content;
+      notesEl.appendChild(div);
     }
 
-    // -----------------------
-    // Realtime (optional)
-    // This won't block if your PoC doesn't have realtime configured.
-    // -----------------------
-    function setupRealtime() {
-      try {
-        const channel = supabase
-          .channel('notes-feed')
-          .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, () => {
-            console.log("Realtime change detected; refreshing…");
-            fetchNotes();
-          })
-          .subscribe((status) => {
-            console.log("Realtime status:", status);
-            // You can display this if you want:
-            // setStatus(`Realtime: ${status}`);
-          });
-
-        return channel;
-      } catch (e) {
-        console.warn("Realtime setup failed (OK for refresh-to-sync PoC).", e);
-        return null;
-      }
-    }
-
-    // -----------------------
-    // Wire up UI events
-    // -----------------------
-    el('refreshBtn').addEventListener('click', fetchNotes);
-    sendBtn.addEventListener('click', addNote);
-    noteInput.addEventListener('keydown', (e) => {
-      // Ctrl/Cmd + Enter to send
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') addNote();
-    });
-
-    // -----------------------
-    // Boot
-    // -----------------------
-    setStatus("Initializing…");
+  } catch (e) {
+    setStatus("❌ Fetch failed");
     setDebug({
-      supabaseLoaded: !!window.supabase,
-      url: SUPABASE_URL,
-      table: TABLE_NAME,
-      noteColumn: NOTE_COL,
-      timestampColumn: TS_COL
+      message: e.message,
+      code: e.code,
+      details: e.details,
+      hint: e.hint
     });
+  }
+}
 
-    // Optional: enable realtime even if you accept refresh-to-sync
-    setupRealtime();
+/* -------------------------------------------------
+   Insert note
+------------------------------------------------- */
+postBtn.onclick = async () => {
+  const text = inputEl.value.trim();
+  if (!text) return;
 
-    // Initial fetch
-    fetchNotes();
-  </script>
+  postBtn.disabled = true;
+  postBtn.textContent = "Posting…";
+
+  try {
+    const { error } = await supabase
+      .from(TABLE)
+      .insert({ content: text });
+
+    if (error) throw error;
+
+    inputEl.value = "";
+    await fetchNotes();
+  } catch (e) {
+    alert("Insert failed: " + e.message);
+    setDebug(e);
+  } finally {
+    postBtn.disabled = false;
+    postBtn.textContent = "Post";
+  }
+};
+
+/* -------------------------------------------------
+   Start
+------------------------------------------------- */
+fetchNotes();
+</script>
+
 </body>
 </html>
