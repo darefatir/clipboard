@@ -9,43 +9,23 @@
 
   <!-- Supabase loader: tries multiple CDNs -->
   <script>
-    (function loadSupabase() {
-      const sources = [
-        // FIX: Remove '.min' and use the standard UMD path
-        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js",
-        // Alternative: Use the package root (redirects automatically to the correct file)
-        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-      ];
+    // 1. Create the promise your app expects immediately
+    // This prevents the "undefined" error if the bottom script runs too fast
+    let resolveLoader;
+    window.__supabase_load_promise__ = new Promise((resolve) => {
+      resolveLoader = resolve;
+    });
+  </script>
 
-      function inject(src) {
-        return new Promise((resolve, reject) => {
-          const s = document.createElement("script");
-          s.src = src;
-          s.async = true;
-          s.onload = () => resolve(src);
-          s.onerror = () => reject(new Error("Failed to load: " + src));
-          document.head.appendChild(s);
-        });
-      }
+  <script type="module">
+    // 2. Import Supabase directly as a module (Modern Standard)
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-      window.__supabase_load_promise__ = (async () => {
-        const errors = [];
-        for (const src of sources) {
-          try {
-            const loadedFrom = await inject(src);
-            // Give browser a microtask tick to register global
-            await new Promise(r => setTimeout(r, 0));
-            if (window.supabase && typeof window.supabase.createClient === "function") {
-              return { ok: true, loadedFrom };
-            }
-            errors.push("Loaded but global missing: " + src);
-          } catch (e) {
-            errors.push(e.message);
-          }
-        }
-        return { ok: false, errors };
-      })();
-    })();
+    // 3. Manually attach it to the window so your existing code works
+    window.supabase = { createClient };
+
+    // 4. Tell your app the library is ready
+    resolveLoader({ ok: true, loadedFrom: 'ES Module (+esm)' });
   </script>
 </head>
 
