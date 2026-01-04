@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,17 +21,13 @@
   </script>
 
   <style>
-    /* Smooth scroll + nicer scrollbars */
     html { scroll-behavior: smooth; }
-
-    /* Custom scrollbar */
     ::-webkit-scrollbar { width: 10px; height: 10px; }
     ::-webkit-scrollbar-track { background: rgba(17,24,39,.7); }
     ::-webkit-scrollbar-thumb { background: rgba(75,85,99,.9); border-radius: 999px; border: 2px solid rgba(17,24,39,.7); }
     ::-webkit-scrollbar-thumb:hover { background: rgba(107,114,128,.95); }
-
-    /* Make date input icon visible on dark bg (best-effort) */
     input[type="date"] { color-scheme: dark; }
+    select { color-scheme: dark; }
   </style>
 </head>
 
@@ -42,7 +39,7 @@
     <div class="absolute bottom-[-10rem] left-[-10rem] h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl"></div>
   </div>
 
-  <div class="mx-auto max-w-5xl px-4 py-6 md:py-10 space-y-6">
+  <div class="mx-auto max-w-6xl px-4 py-6 md:py-10 space-y-6">
 
     <!-- Header -->
     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -88,14 +85,38 @@
 
     <!-- Composer -->
     <div class="rounded-2xl border border-gray-800 bg-gray-900/60 backdrop-blur shadow-xl shadow-black/20">
-      <div class="p-4 md:p-5">
+      <div class="p-4 md:p-5 space-y-4">
+
+        <!-- Meta row: username + topic -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+          <div class="md:col-span-4">
+            <label class="block text-[11px] uppercase tracking-wide text-gray-400 mb-1 ml-1">Username</label>
+            <select id="usernameInput"
+              class="w-full p-2.5 bg-gray-950/60 border border-gray-800 rounded-xl text-sm text-gray-200
+                     focus:border-blue-500/70 focus:ring-2 focus:ring-blue-500/20 focus:outline-none">
+              <option value="papas">🐱 papas</option>
+              <option value="dedes">🐱 dedes</option>
+              <option value="mimis">🐱 mimis</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-8">
+            <label class="block text-[11px] uppercase tracking-wide text-gray-400 mb-1 ml-1">Topic</label>
+            <input id="topicInput" type="text"
+              class="w-full p-2.5 bg-gray-950/60 border border-gray-800 rounded-xl text-sm text-gray-200
+                     focus:border-blue-500/70 focus:ring-2 focus:ring-blue-500/20 focus:outline-none placeholder:text-gray-500"
+              placeholder="e.g. groceries, reminders, ideas…" />
+          </div>
+        </div>
+
+        <!-- Note row -->
         <div class="flex flex-col md:flex-row gap-3">
           <div class="flex-1 relative">
-            <textarea id="input" rows="2"
+            <textarea id="contentInput" rows="3"
               class="w-full p-3 pr-12 bg-gray-950/60 border border-gray-800 rounded-xl text-sm leading-relaxed
                      focus:outline-none focus:border-blue-500/70 focus:ring-2 focus:ring-blue-500/20 transition
                      placeholder:text-gray-500 resize-none"
-              placeholder="Type a new note… (Ctrl/⌘ + Enter to add)"></textarea>
+              placeholder="Write the note… (Ctrl/⌘ + Enter to add)"></textarea>
 
             <div class="absolute right-3 top-3 text-[11px] text-gray-500 font-mono select-none">
               <span id="charCount">0</span>
@@ -116,23 +137,20 @@
           </button>
         </div>
 
-        <div class="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-          <div class="text-xs text-gray-500">
-            Tip: Use multi-line notes; copy any card with one click.
-          </div>
-
-          <div class="flex items-center gap-2">
+        <div class="text-xs text-gray-500 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <div>Tip: Add a topic to make searching easier. Copy any note with one click.</div>
+          <div class="flex items-center gap-3">
             <label class="inline-flex items-center gap-2 text-xs text-gray-400">
               <input id="autoRefresh" type="checkbox" class="h-4 w-4 rounded border-gray-700 bg-gray-950 text-blue-500 focus:ring-blue-500/30" />
               Auto refresh (10s)
             </label>
-
             <button id="clearFiltersBtn"
               class="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-950/50 hover:bg-gray-950 border border-gray-800 text-gray-200 transition">
               Clear filters
             </button>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -146,8 +164,8 @@
                    focus:border-blue-500/70 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
         </div>
 
-        <div class="md:col-span-7">
-          <label class="block text-[11px] uppercase tracking-wide text-gray-400 mb-1 ml-1">Search content</label>
+        <div class="md:col-span-6">
+          <label class="block text-[11px] uppercase tracking-wide text-gray-400 mb-1 ml-1">Search (topic + content)</label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,12 +176,25 @@
             <input type="text" id="textFilter"
               class="w-full pl-10 p-2.5 bg-gray-950/60 border border-gray-800 rounded-xl text-sm text-gray-200
                      focus:border-blue-500/70 focus:ring-2 focus:ring-blue-500/20 focus:outline-none placeholder:text-gray-500"
-              placeholder="Search notes…" />
+              placeholder="Search topic or note…" />
           </div>
         </div>
 
-        <div class="md:col-span-2 flex items-end">
-          <div class="w-full rounded-xl border border-gray-800 bg-gray-950/40 px-3 py-2.5">
+        <div class="md:col-span-3">
+          <label class="block text-[11px] uppercase tracking-wide text-gray-400 mb-1 ml-1">Filter by username</label>
+          <select id="userFilter"
+            class="w-full p-2.5 bg-gray-950/60 border border-gray-800 rounded-xl text-sm text-gray-200
+                   focus:border-blue-500/70 focus:ring-2 focus:ring-blue-500/20 focus:outline-none">
+            <option value="">All</option>
+            <option value="papas">🐱 papas</option>
+            <option value="dedes">🐱 dedes</option>
+            <option value="mimis">🐱 mimis</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-12 flex items-center justify-between">
+          <div class="text-xs text-gray-500">Latest 100 notes.</div>
+          <div class="rounded-xl border border-gray-800 bg-gray-950/40 px-3 py-2">
             <div class="text-[11px] uppercase tracking-wide text-gray-500">Records</div>
             <div id="recordCount" class="text-sm font-semibold text-gray-200">0</div>
           </div>
@@ -171,17 +202,15 @@
       </div>
     </div>
 
-    <!-- Notes list (cards on mobile, table on desktop) -->
+    <!-- Notes list -->
     <div class="rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur shadow-xl shadow-black/15 overflow-hidden">
       <div class="px-4 md:px-5 py-4 border-b border-gray-800 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <div class="h-2 w-2 rounded-full bg-emerald-400"></div>
           <h2 class="font-semibold tracking-tight">Recent Notes</h2>
-          <span class="text-xs text-gray-500">(latest 100)</span>
         </div>
-
         <div class="text-xs text-gray-500 hidden md:block">
-          Click a row to expand • Copy button on each note
+          Copy button on each row • Topic + user included
         </div>
       </div>
 
@@ -190,14 +219,16 @@
         <table class="w-full text-left text-sm">
           <thead class="bg-gray-950/60 text-gray-400 uppercase font-semibold text-[11px] border-b border-gray-800">
             <tr>
-              <th class="px-6 py-3 w-56">Date (UTC+7)</th>
+              <th class="px-6 py-3 w-48">Date (UTC+7)</th>
+              <th class="px-6 py-3 w-32">User</th>
+              <th class="px-6 py-3 w-56">Topic</th>
               <th class="px-6 py-3">Note</th>
               <th class="px-6 py-3 w-32 text-right">Actions</th>
             </tr>
           </thead>
           <tbody id="notesBodyTable" class="divide-y divide-gray-800 text-gray-200">
             <tr>
-              <td colspan="3" class="px-6 py-10 text-center text-gray-500 italic">
+              <td colspan="5" class="px-6 py-10 text-center text-gray-500 italic">
                 Waiting for connection…
               </td>
             </tr>
@@ -214,7 +245,7 @@
     </div>
 
     <footer class="pt-2 text-xs text-gray-600 text-center">
-      Built on GitHub Pages + Supabase (PoC). Make it secure later.
+      GitHub Pages + Supabase (PoC). Secure later with auth + stricter RLS.
     </footer>
 
   </div>
@@ -227,16 +258,24 @@
 
     // --- DOM ELEMENTS ---
     const statusEl = document.getElementById("status");
-    const inputEl = document.getElementById("input");
-    const postBtn = document.getElementById("postBtn");
-    const dateFilter = document.getElementById("dateFilter");
-    const textFilter = document.getElementById("textFilter");
-    const recordCount = document.getElementById("recordCount");
     const refreshBtn = document.getElementById("refreshBtn");
     const autoRefresh = document.getElementById("autoRefresh");
     const clearFiltersBtn = document.getElementById("clearFiltersBtn");
-    const charCount = document.getElementById("charCount");
 
+    // Inputs
+    const usernameInput = document.getElementById("usernameInput");
+    const topicInput = document.getElementById("topicInput");
+    const contentInput = document.getElementById("contentInput");
+    const charCount = document.getElementById("charCount");
+    const postBtn = document.getElementById("postBtn");
+
+    // Filters
+    const dateFilter = document.getElementById("dateFilter");
+    const textFilter = document.getElementById("textFilter");
+    const userFilter = document.getElementById("userFilter");
+    const recordCount = document.getElementById("recordCount");
+
+    // Outputs
     const notesBodyTable = document.getElementById("notesBodyTable");
     const notesBodyCards = document.getElementById("notesBodyCards");
 
@@ -262,6 +301,15 @@
       }[c]));
     }
 
+    function userLabel(u) {
+      const map = {
+        papas: "🐱 papas",
+        dedes: "🐱 dedes",
+        mimis: "🐱 mimis",
+      };
+      return map[u] || (u ? `🐱 ${u}` : "—");
+    }
+
     function formatTimeDisplay(isoString) {
       if (!isoString) return "";
       return new Intl.DateTimeFormat('en-GB', {
@@ -283,7 +331,7 @@
       try {
         await navigator.clipboard.writeText(text || "");
         return true;
-      } catch (e) {
+      } catch {
         return false;
       }
     }
@@ -291,7 +339,7 @@
     function setLoadingState() {
       notesBodyTable.innerHTML = `
         <tr>
-          <td colspan="3" class="px-6 py-10 text-center text-gray-500 italic">Loading…</td>
+          <td colspan="5" class="px-6 py-10 text-center text-gray-500 italic">Loading…</td>
         </tr>`;
       notesBodyCards.innerHTML = `
         <div class="text-center text-gray-500 italic py-8">Loading…</div>`;
@@ -323,7 +371,7 @@
       try {
         const { data, error } = await supabase
           .from(TABLE)
-          .select("*")
+          .select("id, created_at, content, topic, username")
           .order("created_at", { ascending: false })
           .limit(100);
 
@@ -337,7 +385,7 @@
         setStatus("Fetch error", "error");
         notesBodyTable.innerHTML = `
           <tr>
-            <td colspan="3" class="px-6 py-10 text-center text-red-300 italic">
+            <td colspan="5" class="px-6 py-10 text-center text-red-300 italic">
               Failed to load notes. Check console.
             </td>
           </tr>`;
@@ -349,14 +397,22 @@
     }
 
     function applyFilters() {
-      const textTerm = textFilter.value.toLowerCase().trim();
-      const dateTerm = dateFilter.value;
+      const term = textFilter.value.toLowerCase().trim(); // applied to topic + content
+      const dateTerm = dateFilter.value; // YYYY-MM-DD
+      const userTerm = userFilter.value; // papas/dedes/mimis/empty
 
       const filtered = localNotes.filter(note => {
-        const contentMatch = (note.content || "").toLowerCase().includes(textTerm);
+        const content = (note.content || "").toLowerCase();
+        const topic = (note.topic || "").toLowerCase();
+        const combinedMatch = (content.includes(term) || topic.includes(term));
+
         let dateMatch = true;
         if (dateTerm) dateMatch = (getDatePartOnly(note.created_at) === dateTerm);
-        return contentMatch && dateMatch;
+
+        let userMatch = true;
+        if (userTerm) userMatch = ((note.username || "") === userTerm);
+
+        return combinedMatch && dateMatch && userMatch;
       });
 
       recordCount.textContent = String(filtered.length);
@@ -370,7 +426,7 @@
       if (data.length === 0) {
         notesBodyTable.innerHTML = `
           <tr>
-            <td colspan="3" class="px-6 py-10 text-center text-gray-500 italic">
+            <td colspan="5" class="px-6 py-10 text-center text-gray-500 italic">
               No matching notes found.
             </td>
           </tr>`;
@@ -380,6 +436,8 @@
       data.forEach(note => {
         const timeStr = formatTimeDisplay(note.created_at);
         const safeContent = escapeText(note.content);
+        const safeTopic = escapeText(note.topic || "");
+        const uname = note.username || "";
 
         const row = document.createElement("tr");
         row.className = "hover:bg-gray-950/40 transition-colors align-top";
@@ -387,6 +445,16 @@
         row.innerHTML = `
           <td class="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-xs">
             ${timeStr}
+          </td>
+
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center rounded-full border border-gray-800 bg-gray-950/40 px-2.5 py-1 text-xs font-semibold text-gray-200">
+              ${escapeText(userLabel(uname))}
+            </span>
+          </td>
+
+          <td class="px-6 py-4">
+            <div class="text-sm text-gray-200 font-semibold">${safeTopic || '<span class="text-gray-500 font-normal">—</span>'}</div>
           </td>
 
           <td class="px-6 py-4">
@@ -398,7 +466,7 @@
           <td class="px-6 py-4 text-right">
             <button class="copyBtn inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg
                            bg-gray-950/40 hover:bg-gray-950 border border-gray-800 text-gray-200 transition"
-                    data-content="${safeContent.replace(/"/g, '&quot;')}">
+                    data-raw="${encodeURIComponent(JSON.stringify({ username: uname, topic: note.topic || "", content: note.content || "" }))}">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -411,16 +479,14 @@
         notesBodyTable.appendChild(row);
       });
 
-      // Bind copy buttons
       notesBodyTable.querySelectorAll(".copyBtn").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const rawHtml = btn.getAttribute("data-content") || "";
-          // data-content stored as escaped html, so convert to text by decoding in a temp element
-          const temp = document.createElement("div");
-          temp.innerHTML = rawHtml;
-          const txt = temp.textContent || temp.innerText || "";
+          const payload = JSON.parse(decodeURIComponent(btn.getAttribute("data-raw") || "%7B%7D"));
+          const textToCopy =
+`[${userLabel(payload.username)}] ${payload.topic ? payload.topic : "(no topic)"}
+${payload.content}`;
 
-          const ok = await copyToClipboard(txt);
+          const ok = await copyToClipboard(textToCopy);
           if (ok) {
             const prev = btn.innerHTML;
             btn.innerHTML = `<span class="text-emerald-300 font-semibold">Copied!</span>`;
@@ -444,16 +510,27 @@
       data.forEach(note => {
         const timeStr = formatTimeDisplay(note.created_at);
         const safeContent = escapeText(note.content);
+        const safeTopic = escapeText(note.topic || "");
+        const uname = note.username || "";
 
         const card = document.createElement("div");
         card.className = "rounded-2xl border border-gray-800 bg-gray-950/30 p-4 shadow-sm";
 
         card.innerHTML = `
           <div class="flex items-start justify-between gap-3">
-            <div class="text-xs font-mono text-gray-400">${timeStr}</div>
+            <div class="space-y-1">
+              <div class="text-xs font-mono text-gray-400">${timeStr}</div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center rounded-full border border-gray-800 bg-gray-900/50 px-2.5 py-1 text-xs font-semibold text-gray-200">
+                  ${escapeText(userLabel(uname))}
+                </span>
+                <span class="text-xs text-gray-400">${safeTopic || '<span class="text-gray-600">—</span>'}</span>
+              </div>
+            </div>
+
             <button class="copyBtn inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg
                            bg-gray-900/60 hover:bg-gray-900 border border-gray-800 text-gray-200 transition"
-                    data-content="${safeContent.replace(/"/g, '&quot;')}">
+                    data-raw="${encodeURIComponent(JSON.stringify({ username: uname, topic: note.topic || "", content: note.content || "" }))}">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -472,12 +549,12 @@
 
       notesBodyCards.querySelectorAll(".copyBtn").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const rawHtml = btn.getAttribute("data-content") || "";
-          const temp = document.createElement("div");
-          temp.innerHTML = rawHtml;
-          const txt = temp.textContent || temp.innerText || "";
+          const payload = JSON.parse(decodeURIComponent(btn.getAttribute("data-raw") || "%7B%7D"));
+          const textToCopy =
+`[${userLabel(payload.username)}] ${payload.topic ? payload.topic : "(no topic)"}
+${payload.content}`;
 
-          const ok = await copyToClipboard(txt);
+          const ok = await copyToClipboard(textToCopy);
           if (ok) {
             const prev = btn.innerHTML;
             btn.innerHTML = `<span class="text-emerald-300 font-semibold">Copied!</span>`;
@@ -489,8 +566,11 @@
 
     // --- EVENT LISTENERS ---
     postBtn.addEventListener("click", async () => {
-      const text = inputEl.value.trim();
-      if (!text || !supabase) return;
+      const username = (usernameInput.value || "").trim();
+      const topic = (topicInput.value || "").trim();
+      const content = (contentInput.value || "").trim();
+
+      if (!content || !supabase) return;
 
       postBtn.disabled = true;
       const oldText = postBtn.innerHTML;
@@ -501,10 +581,11 @@
         Saving…`;
 
       try {
-        const { error } = await supabase.from(TABLE).insert({ content: text });
+        const { error } = await supabase.from(TABLE).insert({ username, topic, content });
         if (error) throw error;
 
-        inputEl.value = "";
+        topicInput.value = "";
+        contentInput.value = "";
         charCount.textContent = "0";
         await fetchNotes();
       } catch (e) {
@@ -516,25 +597,27 @@
     });
 
     // Ctrl/Cmd + Enter to post
-    inputEl.addEventListener("keydown", (e) => {
+    contentInput.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         postBtn.click();
       }
     });
 
-    // Character counter + auto-expand-ish feel (lightweight)
-    inputEl.addEventListener("input", () => {
-      const len = inputEl.value.length;
+    // Character counter
+    contentInput.addEventListener("input", () => {
+      const len = contentInput.value.length;
       charCount.textContent = String(Math.min(len, 2000));
-      if (len > 2000) inputEl.value = inputEl.value.slice(0, 2000);
+      if (len > 2000) contentInput.value = contentInput.value.slice(0, 2000);
     });
 
     textFilter.addEventListener("input", applyFilters);
     dateFilter.addEventListener("input", applyFilters);
+    userFilter.addEventListener("input", applyFilters);
 
     clearFiltersBtn.addEventListener("click", () => {
       textFilter.value = "";
       dateFilter.value = "";
+      userFilter.value = "";
       applyFilters();
     });
 
@@ -549,7 +632,22 @@
       }
     });
 
+    async function boot() {
+      setStatus("Loading library…");
+      const result = await window.__supabase_load_promise__;
+      if (!result.ok) { setStatus("Library error", "error"); return; }
+
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: false }
+      });
+
+      setStatus("Connecting…");
+      setLoadingState();
+      await fetchNotes();
+    }
+
     boot();
   </script>
 </body>
 </html>
+```
