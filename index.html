@@ -11,8 +11,10 @@
   <script>
     (function loadSupabase() {
       const sources = [
-        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js",
-        "https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"
+        // FIX: Remove '.min' and use the standard UMD path
+        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js",
+        // Alternative: Use the package root (redirects automatically to the correct file)
+        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
       ];
 
       function inject(src) {
